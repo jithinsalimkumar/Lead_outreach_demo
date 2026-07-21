@@ -1,0 +1,27 @@
+Lead Generation Summary Report
+================================
+Total Leads Found: 611
+
+Breakdown by Platform:
+  - LinkedIn: 513
+  - Indeed: 98
+
+Breakdown by Country:
+  - United States: 243
+  - United Kingdom: 184
+  - Canada: 184
+
+Top 10 Companies by Job Posting Count:
+  - Red Bull: 30 postings
+  - Jobgether: 15 postings
+  - Bath & Cabinet Experts: 6 postings
+  - NewsletterJobs.io: 6 postings
+  - Robert Half: 6 postings
+  - Confidential: 6 postings
+  - Ethos: 6 postings
+  - Mercury: 5 postings
+  - Mixam: 5 postings
+  - PepsiCo: 5 postings
+
+Estimated Credits Used: ~480
+================================
