@@ -94,10 +94,18 @@ export async function apiRequest<T>(
     headers["Authorization"] = `Bearer ${tokens.access}`;
   }
 
-  let response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (err) {
+    if (err instanceof TypeError && err.message === "Failed to fetch") {
+      throw new Error("Network error: The server might be waking up (Render free tier) or the API URL is incorrect. Please try again in a minute.");
+    }
+    throw err;
+  }
 
   // If we get a 401 and have a refresh token, try refreshing
   if (response.status === 401 && tokens) {
@@ -135,11 +143,19 @@ export async function apiRequest<T>(
  * Login — authenticates with email/password and stores tokens.
  */
 export async function login(email: string, password: string): Promise<TokenResponse> {
-  const response = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (err) {
+    if (err instanceof TypeError && err.message === "Failed to fetch") {
+      throw new Error("Network error: The server might be waking up (Render free tier) or the API URL is incorrect. Please try again in a minute.");
+    }
+    throw err;
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Login failed" }));
