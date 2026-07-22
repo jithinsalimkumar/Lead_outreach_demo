@@ -61,7 +61,26 @@ app.include_router(settings.router)
 app.include_router(scraped_jobs.router)
 
 
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import Request
+import traceback
+import logging
+
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catch unhandled exceptions to ensure they return a JSONResponse.
+    This prevents Starlette's default 500 plain text response from stripping CORS headers,
+    which causes confusing 'Failed to fetch' errors in the browser.
+    """
+    logger.error(f"Unhandled exception: {exc}")
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": str(exc)},
+    )
 
 @app.get("/", include_in_schema=False)
 async def root():
