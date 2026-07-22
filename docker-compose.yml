@@ -74,9 +74,10 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend/src:/app/src          # Hot-reload: mount source code
-      - ./frontend/public:/app/public
-    command: npx next dev --hostname 0.0.0.0 --port 3000
+      - ./frontend:/app          # Hot-reload: mount source code
+      - /app/node_modules        # Keep node_modules from the image
+      - /app/.next               # Keep .next from the image
+    command: npm run dev -- --hostname 0.0.0.0 --port 3000
 
 volumes:
   postgres_data:

@@ -229,7 +229,7 @@ export default function ScrapedJobsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <a 
-                          href={`https://${job.company_domain}`} 
+                          href={job.company_domain?.startsWith('http') ? job.company_domain : `https://${job.company_domain}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:underline"

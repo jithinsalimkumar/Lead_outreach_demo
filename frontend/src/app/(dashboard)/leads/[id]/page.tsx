@@ -162,7 +162,7 @@ export default function LeadDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Domain</span>
-                  <a href={`https://${lead.company.domain}`} target="_blank" rel="noopener" className="text-blue-600 hover:underline">
+                  <a href={lead.company.domain?.startsWith('http') ? lead.company.domain : `https://${lead.company.domain}`} target="_blank" rel="noopener" className="text-blue-600 hover:underline">
                     {lead.company.domain}
                   </a>
                 </div>

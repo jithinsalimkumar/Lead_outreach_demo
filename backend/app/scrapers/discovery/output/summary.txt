@@ -1,27 +1,25 @@
 Lead Generation Summary Report
 ================================
-Total Leads Found: 659
+Total Leads Found: 14
 
 Breakdown by Platform:
-  - LinkedIn: 583
-  - Indeed: 76
+  - LinkedIn: 0
+  - Indeed: 14
 
 Breakdown by Country:
-  - United States: 273
-  - United Kingdom: 195
-  - Canada: 191
+  - United States: 14
 
 Top 10 Companies by Job Posting Count:
-  - Red Bull: 33 postings
-  - Jobgether: 10 postings
-  - Mixam: 5 postings
-  - Ethos: 5 postings
-  - Agoda: 5 postings
-  - NewsletterJobs.io: 4 postings
-  - Bell: 4 postings
-  - Robert Half: 4 postings
-  - Joyce Windows, Sunrooms & Baths: 3 postings
-  - Blu Digital: 3 postings
+  - ServiceNow: 1 postings
+  - Go Fish Digital: 1 postings
+  - T3 Services Group: 1 postings
+  - University of Florida: 1 postings
+  - Ameris Bank: 1 postings
+  - Kossoris Search, Inc.: 1 postings
+  - GRAIL: 1 postings
+  - NEOMED: 1 postings
+  - Dentsu: 1 postings
+  - Med Equip: 1 postings
 
-Estimated Credits Used: ~480
+Estimated Credits Used: ~40
 ================================

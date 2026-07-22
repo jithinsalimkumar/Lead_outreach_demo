@@ -4,6 +4,8 @@ import uuid
 import pandas as pd
 from datetime import datetime, timezone
 import sys
+import requests
+import urllib.parse
 
 # Add the backend folder to sys.path so we can import from app
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
@@ -29,13 +31,38 @@ async def import_csv_to_db():
     async with async_session_factory() as db:
         new_companies = 0
         new_jobs = 0
+        
+        # Cache for Clearbit responses to avoid duplicate API calls
+        domain_cache = {}
 
         for index, row in df.iterrows():
             company_domain = str(row['company_domain']).strip().lower()
-            if not company_domain or company_domain == 'nan':
-                continue
-                
             company_name = str(row['company_name']).strip()
+            
+            if not company_domain or company_domain == 'nan' or 'linkedin.com' in company_domain or 'indeed.com' in company_domain:
+                if company_name:
+                    # Check cache first
+                    if company_name in domain_cache:
+                        company_domain = domain_cache[company_name]
+                    else:
+                        try:
+                            # Use Clearbit autocomplete API to find the real domain
+                            query = urllib.parse.quote(company_name)
+                            res = requests.get(f"https://autocomplete.clearbit.com/v1/companies/suggest?query={query}", timeout=5)
+                            if res.status_code == 200 and len(res.json()) > 0:
+                                company_domain = res.json()[0]['domain']
+                            else:
+                                import re
+                                clean_name = re.sub(r'[^a-zA-Z0-9]', '', company_name.lower())
+                                company_domain = f"{clean_name}.com"
+                            
+                            domain_cache[company_name] = company_domain
+                        except Exception as e:
+                            import re
+                            clean_name = re.sub(r'[^a-zA-Z0-9]', '', company_name.lower())
+                            company_domain = f"{clean_name}.com"
+                else:
+                    continue
             
             # Map country
             country = "US"
