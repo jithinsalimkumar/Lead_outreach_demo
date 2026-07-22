@@ -38,7 +38,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",    # Next.js dev server
         "http://frontend:3000",     # Docker service name
-        "https://lead-outreach-demo.vercel.app",   # Vercel URL
+        "https://lead-outreach-demo-alpha.vercel.app",   # Vercel URL
     ],
     allow_credentials=True,
     allow_methods=["*"],           # Allow all HTTP methods
