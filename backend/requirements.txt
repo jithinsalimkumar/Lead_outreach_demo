@@ -14,7 +14,7 @@ alembic==1.13.2
 # Auth & security
 pyjwt==2.9.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.2.0
+bcrypt==3.2.2
 cryptography==43.0.1
 
 # Validation & serialization (installed with FastAPI, pinned for clarity)
