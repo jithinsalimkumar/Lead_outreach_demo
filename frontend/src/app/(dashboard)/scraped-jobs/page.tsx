@@ -9,7 +9,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, API_BASE } from "@/lib/api";
 import { ScrapedJob, PaginatedResponse } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ export default function ScrapedJobsPage() {
       if (portal) params.set("portal", portal);
       if (tierSignal) params.set("tier_signal", tierSignal);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/scraped-jobs/export?${params}`, {
+      const response = await fetch(`${API_BASE}/api/scraped-jobs/export?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

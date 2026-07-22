@@ -9,7 +9,12 @@
 
 import { TokenResponse } from "@/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+if (!API_BASE) {
+  throw new Error("NEXT_PUBLIC_API_URL environment variable is not defined");
+}
+
+export { API_BASE };
 
 /**
  * Get stored tokens from localStorage.
