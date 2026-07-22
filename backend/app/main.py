@@ -59,6 +59,13 @@ app.include_router(settings.router)
 app.include_router(scraped_jobs.router)
 
 
+from fastapi.responses import RedirectResponse
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Redirect root path to the Swagger UI."""
+    return RedirectResponse(url="/api/docs")
+
 @app.get("/api/health")
 async def health_check():
     """Simple health check endpoint — useful for Docker health checks."""
