@@ -9,12 +9,7 @@
 
 import { TokenResponse } from "@/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-if (!API_BASE) {
-  throw new Error("NEXT_PUBLIC_API_URL environment variable is not defined");
-}
-
-export { API_BASE };
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * Get stored tokens from localStorage.
@@ -94,18 +89,10 @@ export async function apiRequest<T>(
     headers["Authorization"] = `Bearer ${tokens.access}`;
   }
 
-  let response;
-  try {
-    response = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers,
-    });
-  } catch (err) {
-    if (err instanceof TypeError && err.message === "Failed to fetch") {
-      throw new Error("Network error: The server might be waking up (Render free tier) or the API URL is incorrect. Please try again in a minute.");
-    }
-    throw err;
-  }
+  let response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
 
   // If we get a 401 and have a refresh token, try refreshing
   if (response.status === 401 && tokens) {
@@ -143,19 +130,11 @@ export async function apiRequest<T>(
  * Login — authenticates with email/password and stores tokens.
  */
 export async function login(email: string, password: string): Promise<TokenResponse> {
-  let response;
-  try {
-    response = await fetch(`${API_BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-  } catch (err) {
-    if (err instanceof TypeError && err.message === "Failed to fetch") {
-      throw new Error("Network error: The server might be waking up (Render free tier) or the API URL is incorrect. Please try again in a minute.");
-    }
-    throw err;
-  }
+  const response = await fetch(`${API_BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Login failed" }));
