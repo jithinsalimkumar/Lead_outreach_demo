@@ -188,15 +188,25 @@ export default function CampaignDetailPage() {
                             <td key={step} className="px-4 py-3">
                               <div className="flex items-center justify-center gap-1">
                                 {send.bounced ? (
-                                  <AlertTriangle className="h-3.5 w-3.5 text-red-500" title="Bounced" />
+                                  <span title="Bounced">
+                                    <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                                  </span>
                                 ) : send.replied ? (
-                                  <MessageSquareReply className="h-3.5 w-3.5 text-green-500" title="Replied" />
+                                  <span title="Replied">
+                                    <MessageSquareReply className="h-3.5 w-3.5 text-green-500" />
+                                  </span>
                                 ) : send.clicked ? (
-                                  <MousePointerClick className="h-3.5 w-3.5 text-indigo-500" title="Clicked" />
+                                  <span title="Clicked">
+                                    <MousePointerClick className="h-3.5 w-3.5 text-indigo-500" />
+                                  </span>
                                 ) : send.opened ? (
-                                  <Mail className="h-3.5 w-3.5 text-blue-500" title="Opened" />
+                                  <span title="Opened">
+                                    <Mail className="h-3.5 w-3.5 text-blue-500" />
+                                  </span>
                                 ) : send.sent_at ? (
-                                  <Send className="h-3.5 w-3.5 text-slate-400" title="Sent" />
+                                  <span title="Sent">
+                                    <Send className="h-3.5 w-3.5 text-slate-400" />
+                                  </span>
                                 ) : (
                                   <span className="text-xs text-slate-300">Queued</span>
                                 )}
