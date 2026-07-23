@@ -17,15 +17,10 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://") and not database_url.startswith("postgresql+asyncpg://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-connect_args = {}
-if "supabase" in database_url or "render" in database_url or "ssl" in database_url:
-    connect_args["ssl"] = "require"
-
 # Create the async engine — echo=False in production, True for debugging SQL
 engine = create_async_engine(
     database_url,
     echo=False,
-    connect_args=connect_args,
     pool_size=20,         # Max persistent connections
     max_overflow=10,      # Extra connections allowed beyond pool_size
     pool_pre_ping=True,   # Verify connections are alive before using them
