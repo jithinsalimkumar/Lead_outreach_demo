@@ -5,7 +5,7 @@ This module creates the FastAPI app, configures CORS, and registers
 all API routers. The app is started by Uvicorn (see docker-compose.yml).
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 
@@ -86,13 +86,19 @@ async def health_check():
     """Simple health check endpoint — useful for Docker health checks."""
     return {"status": "healthy", "service": "lead-outreach-backend"}
 
-@app.all("/api/seed")
-async def trigger_seed():
-    """Endpoint to trigger database seeding if database is empty."""
+@app.post("/api/seed")
+async def trigger_seed(secret: str):
+    """Endpoint to trigger database seeding if database is empty (requires SEED_SECRET)."""
+    if secret != settings.SEED_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden",
+        )
     from app.seed import seed
     try:
         await seed(auto_confirm=True)
         return {"status": "success", "message": "Database seed completed or already seeded."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
 
