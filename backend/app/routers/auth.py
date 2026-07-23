@@ -74,8 +74,9 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
 
     Returns an access token (short-lived) and a refresh token (long-lived).
     """
-    # Find the user by email
-    result = await db.execute(select(User).where(User.email == body.email))
+    # Find the user by email (case-insensitive & trimmed)
+    clean_email = body.email.strip().lower()
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(body.password, user.hashed_password):

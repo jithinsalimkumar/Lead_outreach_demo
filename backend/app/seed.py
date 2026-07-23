@@ -39,8 +39,12 @@ from app.services.auth import hash_password
 async def seed():
     """Main seed function — creates all test data."""
     print("WARNING: This is a local dev seed script.")
-    confirm = input("Type 'yes' to proceed with inserting dummy data: ")
-    if confirm.lower() != 'yes':
+    import sys
+    if "--yes" in sys.argv or "-y" in sys.argv:
+        confirm = "yes"
+    else:
+        confirm = input("Type 'yes' to proceed with inserting dummy data: ")
+    if confirm.lower().strip() != 'yes':
         print("Aborting seed script.")
         return
 
