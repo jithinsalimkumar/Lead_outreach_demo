@@ -67,6 +67,40 @@ async def register(
     return user
 
 
+@router.post("/bootstrap", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+async def bootstrap_admin(
+    body: RegisterRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    TEMPORARY: Create the very first admin user when the users table is empty.
+
+    This endpoint does NOT require authentication. It only works when there
+    are zero users in the database (first-run bootstrap). Once any user
+    exists, it returns 409 Conflict and refuses to create more.
+
+    Remove this endpoint after the first admin account has been created.
+    """
+    # Safety check: refuse if ANY user already exists
+    existing = await db.execute(select(User).limit(1))
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Users already exist — use POST /api/auth/register with admin credentials instead",
+        )
+
+    # Force role to admin for bootstrap
+    user = User(
+        email=body.email,
+        hashed_password=hash_password(body.password),
+        role="admin",
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     """
