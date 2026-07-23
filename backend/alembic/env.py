@@ -44,7 +44,8 @@ elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+as
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 # Override the sqlalchemy.url from alembic.ini with our actual database URL
-config.set_main_option("sqlalchemy.url", db_url)
+# Note: Escape % as %% because ConfigParser treats single % as an interpolation character
+config.set_main_option("sqlalchemy.url", db_url.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:
