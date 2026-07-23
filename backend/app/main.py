@@ -32,17 +32,20 @@ app = FastAPI(
 )
 
 # --- CORS Middleware ---
-# Allow the Next.js frontend (port 3000) to call the backend (port 8000)
+cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+cors_origins.extend([
+    "http://localhost:3000",
+    "http://frontend:3000",
+    "https://lead-outreach-demo-alpha.vercel.app",
+])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",    # Next.js dev server
-        "http://frontend:3000",     # Docker service name
-        "https://lead-outreach-demo-alpha.vercel.app",   # Vercel URL
-    ],
+    allow_origins=list(set(cors_origins)),
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
-    allow_methods=["*"],           # Allow all HTTP methods
-    allow_headers=["*"],           # Allow all headers (including Authorization)
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- Register API Routers ---
