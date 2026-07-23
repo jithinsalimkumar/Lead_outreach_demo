@@ -8,7 +8,6 @@ all API routers. The app is started by Uvicorn (see docker-compose.yml).
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import settings
 from app.routers import (
     auth,
     campaigns,
@@ -16,11 +15,11 @@ from app.routers import (
     dashboard,
     enrichment,
     leads,
-    scraped_jobs,
-    settings as settings_router,
+    settings,
     suppression,
     users,
     webhooks,
+    scraped_jobs,
 )
 
 # Create the FastAPI application
@@ -33,20 +32,17 @@ app = FastAPI(
 )
 
 # --- CORS Middleware ---
-cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
-cors_origins.extend([
-    "http://localhost:3000",
-    "http://frontend:3000",
-    "https://lead-outreach-demo-alpha.vercel.app",
-])
-
+# Allow the Next.js frontend (port 3000) to call the backend (port 8000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(set(cors_origins)),
-    allow_origin_regex=r"https://.*\.onrender\.com",
+    allow_origins=[
+        "http://localhost:3000",    # Next.js dev server
+        "http://frontend:3000",     # Docker service name
+        "https://lead-outreach-demo-alpha.vercel.app",   # Vercel URL
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],           # Allow all HTTP methods
+    allow_headers=["*"],           # Allow all headers (including Authorization)
 )
 
 # --- Register API Routers ---
@@ -60,7 +56,7 @@ app.include_router(campaigns.router)
 app.include_router(suppression.router)
 app.include_router(webhooks.router)
 app.include_router(dashboard.router)
-app.include_router(settings_router.router)
+app.include_router(settings.router)
 app.include_router(scraped_jobs.router)
 
 

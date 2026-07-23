@@ -15,10 +15,11 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Import config and database helpers
-from app.config import settings
-from app.database import Base, sanitize_asyncpg_url
+# Import our models so Alembic can see all tables
+# This import triggers app.models.__init__.py which imports every model
+from app.database import Base
 from app.models import *  # noqa: F401, F403
+from app.config import settings
 
 # Alembic Config object — provides access to alembic.ini values
 config = context.config
@@ -31,8 +32,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Override the sqlalchemy.url from alembic.ini with our actual database URL
-db_url = sanitize_asyncpg_url(settings.DATABASE_URL)
-config.set_main_option("sqlalchemy.url", db_url)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
