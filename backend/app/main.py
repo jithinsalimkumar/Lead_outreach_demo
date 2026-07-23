@@ -8,6 +8,7 @@ all API routers. The app is started by Uvicorn (see docker-compose.yml).
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from app.routers import (
     auth,
     campaigns,
@@ -15,11 +16,11 @@ from app.routers import (
     dashboard,
     enrichment,
     leads,
-    settings,
+    scraped_jobs,
+    settings as settings_router,
     suppression,
     users,
     webhooks,
-    scraped_jobs,
 )
 
 # Create the FastAPI application
@@ -59,7 +60,7 @@ app.include_router(campaigns.router)
 app.include_router(suppression.router)
 app.include_router(webhooks.router)
 app.include_router(dashboard.router)
-app.include_router(settings.router)
+app.include_router(settings_router.router)
 app.include_router(scraped_jobs.router)
 
 
