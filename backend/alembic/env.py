@@ -31,6 +31,8 @@ if config.config_file_name is not None:
 # Tell Alembic which metadata to compare against (our Base.metadata has all tables)
 target_metadata = Base.metadata
 
+import re
+
 # Override the sqlalchemy.url from alembic.ini with our actual database URL
 db_url = settings.DATABASE_URL
 if db_url.startswith("postgres://"):
@@ -38,9 +40,8 @@ if db_url.startswith("postgres://"):
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# asyncpg expects 'ssl' instead of 'sslmode' query param
-if "sslmode=" in db_url:
-    db_url = db_url.replace("sslmode=", "ssl=")
+# asyncpg expects 'ssl' instead of 'sslmode' query parameter
+db_url = re.sub(r'([?&])sslmode=([^&]*)', r'\1ssl=\2', db_url, flags=re.IGNORECASE)
 
 config.set_main_option("sqlalchemy.url", db_url)
 

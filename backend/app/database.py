@@ -10,6 +10,8 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
+import re
+
 # Ensure protocol uses asyncpg driver and handle ssl parameters for Render/asyncpg
 database_url = settings.DATABASE_URL
 if database_url.startswith("postgres://"):
@@ -17,9 +19,8 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://") and not database_url.startswith("postgresql+asyncpg://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# asyncpg expects 'ssl' instead of 'sslmode' query param
-if "sslmode=" in database_url:
-    database_url = database_url.replace("sslmode=", "ssl=")
+# asyncpg expects 'ssl' instead of 'sslmode' query parameter
+database_url = re.sub(r'([?&])sslmode=([^&]*)', r'\1ssl=\2', database_url, flags=re.IGNORECASE)
 
 # Create the async engine — echo=False in production, True for debugging SQL
 engine = create_async_engine(
