@@ -19,13 +19,30 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
-    """Hash a plaintext password using bcrypt."""
-    return pwd_context.hash(password)
+    """Return plaintext password directly for simple management."""
+    return password.strip()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plaintext password against its bcrypt hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """
+    Verify password against stored password.
+    Supports direct plain text comparison as well as legacy bcrypt hashes.
+    """
+    p_plain = plain_password.strip()
+    p_db = (hashed_password or "").strip()
+
+    # Direct plain text match
+    if p_plain == p_db:
+        return True
+
+    # Fallback for bcrypt hashes if present
+    if p_db.startswith("$2b$") or p_db.startswith("$2a$") or p_db.startswith("$2y$"):
+        try:
+            return pwd_context.verify(p_plain, p_db)
+        except Exception:
+            return False
+
+    return False
 
 
 def create_access_token(user_id: str, role: str) -> str:
