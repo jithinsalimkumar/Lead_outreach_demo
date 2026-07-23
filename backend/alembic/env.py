@@ -8,6 +8,7 @@ so it can auto-generate migrations.
 
 import asyncio
 from logging.config import fileConfig
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -32,7 +33,30 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Override the sqlalchemy.url from alembic.ini with our actual database URL
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Fix protocol prefix for asyncpg and strip unsupported query params
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+parsed = urlparse(db_url)
+query_params = parse_qs(parsed.query)
+needs_ssl = query_params.pop("sslmode", [None])[0] in ("require", "verify-ca", "verify-full")
+query_params.pop("channel_binding", None)
+clean_query = urlencode({k: v[0] for k, v in query_params.items()})
+db_url = urlunparse(parsed._replace(query=clean_query))
+
+# Build connect_args for SSL if needed
+alembic_connect_args = {}
+if needs_ssl:
+    import ssl as _ssl
+    ssl_ctx = _ssl.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = _ssl.CERT_NONE
+    alembic_connect_args["ssl"] = ssl_ctx
+
+config.set_main_option("sqlalchemy.url", db_url)
 
 
 def run_migrations_offline() -> None:
@@ -69,6 +93,7 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=alembic_connect_args,
     )
 
     async with connectable.connect() as connection:

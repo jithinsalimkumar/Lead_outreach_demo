@@ -5,6 +5,8 @@ Creates the async engine and session factory. The `get_db` dependency
 yields a session per request and ensures cleanup.
 """
 
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -17,6 +19,24 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://") and not database_url.startswith("postgresql+asyncpg://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+# Strip query params that asyncpg doesn't support (sslmode, channel_binding)
+# and pass SSL via connect_args instead
+parsed = urlparse(database_url)
+query_params = parse_qs(parsed.query)
+needs_ssl = query_params.pop("sslmode", [None])[0] in ("require", "verify-ca", "verify-full")
+query_params.pop("channel_binding", None)
+clean_query = urlencode({k: v[0] for k, v in query_params.items()})
+database_url = urlunparse(parsed._replace(query=clean_query))
+
+# Build connect_args — enable SSL if sslmode was in the original URL
+connect_args = {}
+if needs_ssl:
+    import ssl as _ssl
+    ssl_ctx = _ssl.create_default_context()
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = _ssl.CERT_NONE
+    connect_args["ssl"] = ssl_ctx
+
 # Create the async engine — echo=False in production, True for debugging SQL
 engine = create_async_engine(
     database_url,
@@ -24,6 +44,7 @@ engine = create_async_engine(
     pool_size=20,         # Max persistent connections
     max_overflow=10,      # Extra connections allowed beyond pool_size
     pool_pre_ping=True,   # Verify connections are alive before using them
+    connect_args=connect_args,
 )
 
 # Session factory — each call creates a new async session
