@@ -17,32 +17,10 @@ from alembic import context
 
 # Import our models so Alembic can see all tables
 # This import triggers app.models.__init__.py which imports every model
-from app.database import Base
-from app.models import *  # noqa: F401, F403
-from app.config import settings
-
-# Alembic Config object — provides access to alembic.ini values
-config = context.config
-
-# Set up Python logging from alembic.ini
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
-# Tell Alembic which metadata to compare against (our Base.metadata has all tables)
-target_metadata = Base.metadata
-
-import re
+from app.database import Base, sanitize_asyncpg_url
 
 # Override the sqlalchemy.url from alembic.ini with our actual database URL
-db_url = settings.DATABASE_URL
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
-elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-
-# asyncpg expects 'ssl' instead of 'sslmode' query parameter
-db_url = re.sub(r'([?&])sslmode=([^&]*)', r'\1ssl=\2', db_url, flags=re.IGNORECASE)
-
+db_url = sanitize_asyncpg_url(settings.DATABASE_URL)
 config.set_main_option("sqlalchemy.url", db_url)
 
 
