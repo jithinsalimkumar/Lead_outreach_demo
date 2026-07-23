@@ -32,16 +32,33 @@ app = FastAPI(
     redoc_url="/api/redoc",    # ReDoc at /api/redoc
 )
 
-# --- CORS Middleware ---
-cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+from fastapi.responses import JSONResponse, RedirectResponse
 
+# --- Universal CORS Middleware ---
+# Allows requests from ANY frontend origin (Render, Vercel, localhost, custom domains, etc.)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],           # Allow all HTTP methods
-    allow_headers=["*"],           # Allow all headers (including Authorization)
+    allow_origins=["*"],
+    allow_credentials=False,        # Set to False when using wildcard "*" as required by CORS spec
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    """
+    Global exception handler to catch any unhandled server errors.
+    Ensures CORS headers are ALWAYS returned even on internal 500 errors
+    so the frontend receives the actual error message instead of a CORS block.
+    """
+    import logging
+    logging.exception("Unhandled server exception: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}"},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
 
 # --- Register API Routers ---
 # Each router is a group of related endpoints (see routers/ directory)
