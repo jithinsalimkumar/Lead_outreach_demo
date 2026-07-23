@@ -50,7 +50,7 @@ def build_query(
     date_to: date | None = None,
 ):
     """Helper to build the base query with filters."""
-    query = select(JobPosting, Company).join(Company, JobPosting.company_id == Company.id)
+    query = select(JobPosting, Company).outerjoin(Company, JobPosting.company_id == Company.id)
 
     if country:
         query = query.where(Company.country == country)
@@ -106,9 +106,9 @@ async def list_scraped_jobs(
         items.append(
             ScrapedJobOut(
                 id=str(job.id),
-                company_name=company.name,
-                company_domain=company.domain,
-                country=company.country,
+                company_name=company.name if company else "Unknown",
+                company_domain=company.domain if company else "",
+                country=company.country if company else "US",
                 job_title=job.title,
                 tier_signal=job.tier_signal,
                 job_url=job.url,
@@ -153,15 +153,15 @@ async def export_scraped_jobs(
     
     for job, company in result.all():
         writer.writerow([
-            company.name,
-            company.domain,
-            company.country,
+            company.name if company else "Unknown",
+            company.domain if company else "",
+            company.country if company else "US",
             job.title,
             job.tier_signal,
             job.url,
             job.portal,
             job.location or "",
-            job.scraped_at.isoformat()
+            job.scraped_at.isoformat() if job.scraped_at else ""
         ])
         
     output.seek(0)
