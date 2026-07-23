@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = ""
 
     # --- CORS ---
-    CORS_ORIGINS: str = "http://localhost:3000,http://frontend:3000,https://lead-outreach-demo-alpha.vercel.app,https://lead-outreach-frontend.onrender.com"
+    CORS_ORIGINS: str = "http://localhost:3000,http://frontend:3000,https://lead-outreach-frontend.onrender.com"
 
     class Config:
         # Load from .env file if present (Docker sets these via env_file)
