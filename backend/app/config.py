@@ -21,9 +21,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # --- Seed Protection ---
-    SEED_SECRET: str
-
     # --- Encryption (Fernet key for API key storage) ---
     ENCRYPTION_KEY: str = ""
 

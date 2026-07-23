@@ -5,7 +5,7 @@ This module creates the FastAPI app, configures CORS, and registers
 all API routers. The app is started by Uvicorn (see docker-compose.yml).
 """
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 
@@ -23,21 +23,6 @@ from app.routers import (
     scraped_jobs,
 )
 
-from contextlib import asynccontextmanager
-import logging
-
-logger = logging.getLogger(__name__)
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Auto-seed database on startup if empty
-    try:
-        from app.seed import seed
-        await seed(auto_confirm=True)
-    except Exception as e:
-        logger.warning(f"Auto-seed check failed or skipped: {e}")
-    yield
-
 # Create the FastAPI application
 app = FastAPI(
     title="Lead Outreach System",
@@ -45,7 +30,6 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/api/docs",      # Swagger UI at /api/docs
     redoc_url="/api/redoc",    # ReDoc at /api/redoc
-    lifespan=lifespan,
 )
 
 # --- CORS Middleware ---
@@ -85,20 +69,3 @@ async def root():
 async def health_check():
     """Simple health check endpoint — useful for Docker health checks."""
     return {"status": "healthy", "service": "lead-outreach-backend"}
-
-@app.post("/api/seed")
-async def trigger_seed(secret: str):
-    """Endpoint to trigger database seeding if database is empty (requires SEED_SECRET)."""
-    if secret != settings.SEED_SECRET:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden",
-        )
-    from app.seed import seed
-    try:
-        await seed(auto_confirm=True)
-        return {"status": "success", "message": "Database seed completed or already seeded."}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-

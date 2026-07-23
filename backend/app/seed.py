@@ -36,18 +36,13 @@ from app.models import (
 from app.services.auth import hash_password
 
 
-import os
-import sys
-
-async def seed(auto_confirm: bool = False):
+async def seed():
     """Main seed function — creates all test data."""
-    is_auto = auto_confirm or "--auto" in sys.argv or "-y" in sys.argv or os.environ.get("AUTO_SEED") == "true"
-    if not is_auto:
-        print("WARNING: This is a local dev seed script.")
-        confirm = input("Type 'yes' to proceed with inserting dummy data: ")
-        if confirm.lower() != 'yes':
-            print("Aborting seed script.")
-            return
+    print("WARNING: This is a local dev seed script.")
+    confirm = input("Type 'yes' to proceed with inserting dummy data: ")
+    if confirm.lower() != 'yes':
+        print("Aborting seed script.")
+        return
 
     async with async_session_factory() as db:
         # Check if data already exists (idempotent)
