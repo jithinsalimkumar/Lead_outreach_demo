@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     # --- Encryption (Fernet key for API key storage) ---
     ENCRYPTION_KEY: str = ""
 
+    # --- CORS ---
+    CORS_ORIGINS: str = "*"  # Comma-separated allowed origins or "*"
+
     class Config:
         # Load from .env file if present (Docker sets these via env_file)
         env_file = ".env"

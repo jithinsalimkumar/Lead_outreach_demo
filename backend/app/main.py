@@ -31,18 +31,24 @@ app = FastAPI(
     redoc_url="/api/redoc",    # ReDoc at /api/redoc
 )
 
+from app.config import settings
+
 # --- CORS Middleware ---
-# Allow the Next.js frontend (port 3000) to call the backend (port 8000)
+allowed_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+if "*" in allowed_origins:
+    allowed_origins = ["*"]
+else:
+    allowed_origins.extend([
+        "http://localhost:3000",
+        "http://frontend:3000",
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",    # Next.js dev server
-        "http://frontend:3000",     # Docker service name
-        "https://lead-outreach-demo-alpha.vercel.app",   # Vercel URL
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],           # Allow all HTTP methods
-    allow_headers=["*"],           # Allow all headers (including Authorization)
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- Register API Routers ---
