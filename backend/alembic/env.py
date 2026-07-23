@@ -7,7 +7,12 @@ so it can auto-generate migrations.
 """
 
 import asyncio
+import sys
+from pathlib import Path
 from logging.config import fileConfig
+
+# Add backend directory to sys.path so 'app' module can be imported anywhere
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
