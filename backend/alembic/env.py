@@ -15,9 +15,20 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Import our models so Alembic can see all tables
-# This import triggers app.models.__init__.py which imports every model
+# Import config and database helpers
+from app.config import settings
 from app.database import Base, sanitize_asyncpg_url
+from app.models import *  # noqa: F401, F403
+
+# Alembic Config object — provides access to alembic.ini values
+config = context.config
+
+# Set up Python logging from alembic.ini
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+# Tell Alembic which metadata to compare against (our Base.metadata has all tables)
+target_metadata = Base.metadata
 
 # Override the sqlalchemy.url from alembic.ini with our actual database URL
 db_url = sanitize_asyncpg_url(settings.DATABASE_URL)
