@@ -32,31 +32,21 @@ if config.config_file_name is not None:
 # Tell Alembic which metadata to compare against (our Base.metadata has all tables)
 target_metadata = Base.metadata
 
-# Override the sqlalchemy.url from alembic.ini with our actual database URL
-# Fix protocol prefix for asyncpg and strip unsupported query params
-db_url = settings.DATABASE_URL
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
-elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+asyncpg://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-
-parsed = urlparse(db_url)
+# Override the sqlalchemy.url from alembic.ini with our actual database URL.
+# Strip ?sslmode=... — asyncpg does not accept it as a URL query param.
+alembic_db_url = settings.DATABASE_URL
+parsed = urlparse(alembic_db_url)
 query_params = parse_qs(parsed.query)
-needs_ssl = query_params.pop("sslmode", [None])[0] in ("require", "verify-ca", "verify-full")
-query_params.pop("channel_binding", None)
-clean_query = urlencode({k: v[0] for k, v in query_params.items()})
-db_url = urlunparse(parsed._replace(query=clean_query))
+ssl_mode = query_params.pop("sslmode", [None])[0]
+cleaned_query = urlencode(query_params, doseq=True)
+alembic_db_url = urlunparse(parsed._replace(query=cleaned_query))
 
 # Build connect_args for SSL if needed
 alembic_connect_args = {}
-if needs_ssl:
-    import ssl as _ssl
-    ssl_ctx = _ssl.create_default_context()
-    ssl_ctx.check_hostname = False
-    ssl_ctx.verify_mode = _ssl.CERT_NONE
-    alembic_connect_args["ssl"] = ssl_ctx
+if ssl_mode:
+    alembic_connect_args["ssl"] = ssl_mode  # e.g. "require"
 
-config.set_main_option("sqlalchemy.url", db_url)
+config.set_main_option("sqlalchemy.url", alembic_db_url)
 
 
 def run_migrations_offline() -> None:
@@ -112,3 +102,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+

@@ -19,23 +19,18 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://") and not database_url.startswith("postgresql+asyncpg://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Strip query params that asyncpg doesn't support (sslmode, channel_binding)
-# and pass SSL via connect_args instead
+# Strip ?sslmode=... from the URL — asyncpg does not accept it as a query param.
+# SSL is configured via connect_args below instead.
 parsed = urlparse(database_url)
 query_params = parse_qs(parsed.query)
-needs_ssl = query_params.pop("sslmode", [None])[0] in ("require", "verify-ca", "verify-full")
-query_params.pop("channel_binding", None)
-clean_query = urlencode({k: v[0] for k, v in query_params.items()})
-database_url = urlunparse(parsed._replace(query=clean_query))
+ssl_mode = query_params.pop("sslmode", [None])[0]
+cleaned_query = urlencode(query_params, doseq=True)
+database_url = urlunparse(parsed._replace(query=cleaned_query))
 
-# Build connect_args — enable SSL if sslmode was in the original URL
+# Build connect_args: pass SSL to asyncpg the way it expects
 connect_args = {}
-if needs_ssl:
-    import ssl as _ssl
-    ssl_ctx = _ssl.create_default_context()
-    ssl_ctx.check_hostname = False
-    ssl_ctx.verify_mode = _ssl.CERT_NONE
-    connect_args["ssl"] = ssl_ctx
+if ssl_mode:
+    connect_args["ssl"] = ssl_mode  # e.g. "require"
 
 # Create the async engine — echo=False in production, True for debugging SQL
 engine = create_async_engine(
