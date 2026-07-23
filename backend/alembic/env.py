@@ -8,7 +8,6 @@ so it can auto-generate migrations.
 
 import asyncio
 from logging.config import fileConfig
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -32,21 +31,8 @@ if config.config_file_name is not None:
 # Tell Alembic which metadata to compare against (our Base.metadata has all tables)
 target_metadata = Base.metadata
 
-# Override the sqlalchemy.url from alembic.ini with our actual database URL.
-# Strip ?sslmode=... — asyncpg does not accept it as a URL query param.
-alembic_db_url = settings.DATABASE_URL
-parsed = urlparse(alembic_db_url)
-query_params = parse_qs(parsed.query)
-ssl_mode = query_params.pop("sslmode", [None])[0]
-cleaned_query = urlencode(query_params, doseq=True)
-alembic_db_url = urlunparse(parsed._replace(query=cleaned_query))
-
-# Build connect_args for SSL if needed
-alembic_connect_args = {}
-if ssl_mode:
-    alembic_connect_args["ssl"] = ssl_mode  # e.g. "require"
-
-config.set_main_option("sqlalchemy.url", alembic_db_url)
+# Override the sqlalchemy.url from alembic.ini with our actual database URL
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
 def run_migrations_offline() -> None:
@@ -83,7 +69,6 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args=alembic_connect_args,
     )
 
     async with connectable.connect() as connection:
@@ -102,4 +87,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

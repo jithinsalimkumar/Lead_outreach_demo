@@ -67,7 +67,6 @@ async def register(
     return user
 
 
-
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
     """
