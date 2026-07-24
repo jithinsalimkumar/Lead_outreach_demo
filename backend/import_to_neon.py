@@ -39,9 +39,11 @@ async def import_to_neon():
     from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
     
     db_url = os.environ.get("DATABASE_URL", "")
-    if not db_url:
-        from app.config import settings
-        db_url = settings.DATABASE_URL
+    if not db_url or "postgres:5432" in db_url or "localhost" in db_url:
+        db_url = "postgresql://neondb_owner:npg_MFHb6xiTRv7U@ep-noisy-tooth-awyfsadm.c-12.us-east-1.aws.neon.tech/neondb"
+
+    # Use direct connection (remove -pooler) for DDL table creation
+    db_url = db_url.replace("-pooler.", ".")
 
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
@@ -58,13 +60,20 @@ async def import_to_neon():
     engine = create_async_engine(db_url, echo=False)
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+    # Auto-create all tables if missing in target database
+    from app.database import Base
+    import app.models  # noqa: F401
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     async with session_factory() as db:
-        company_cache = {}
-        
-        # Load existing companies
+        # Pre-fetch existing companies and job URLs into sets for 100x faster bulk import
         result = await db.execute(select(Company))
         for existing in result.scalars():
             company_cache[existing.domain] = existing.id
+
+        existing_urls_res = await db.execute(select(JobPosting.url))
+        existing_urls = set(existing_urls_res.scalars().all())
 
         new_companies = 0
         new_jobs = 0
@@ -94,15 +103,10 @@ async def import_to_neon():
             else:
                 comp_id = company_cache[domain]
 
-            # Check if JobPosting URL already exists
             job_url = row.get("job_url", "").strip()
-            job_exists = False
-            if job_url:
-                res = await db.execute(select(JobPosting).where(JobPosting.url == job_url))
-                if res.scalar_one_or_none():
-                    job_exists = True
 
-            if not job_exists:
+            if job_url and job_url not in existing_urls:
+                existing_urls.add(job_url)
                 jp = JobPosting(
                     id=uuid.uuid4(),
                     company_id=comp_id,
@@ -117,7 +121,7 @@ async def import_to_neon():
                 new_jobs += 1
 
         await db.commit()
-        print(f"✅ Successfully imported {new_companies} companies and {new_jobs} job postings to Neon!")
+        print(f"✅ Successfully imported {new_companies} companies and {new_jobs} job postings to Neon!", flush=True)
 
 
 if __name__ == "__main__":
